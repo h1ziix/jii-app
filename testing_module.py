@@ -312,12 +312,12 @@ def _test_session_key(token: str) -> str:
     return f"test_session_{token}"
 
 
-def _get_test_session(token: str) -> dict[str, str] | None:
+def _get_test_session(token: str) -> dict[str, object] | None:
     value = session.get(_test_session_key(token))
     return value if isinstance(value, dict) else None
 
 
-def _set_test_session(token: str, payload: dict[str, str]) -> None:
+def _set_test_session(token: str, payload: dict[str, object]) -> None:
     session[_test_session_key(token)] = payload
     session.modified = True
 
@@ -681,31 +681,62 @@ def _attempt_limit_reached(test: sqlite3.Row, user_id: int) -> tuple[bool, int, 
 
 def _shuffle_questions_for_session(token: str, questions: list[dict[str, object]]) -> list[dict[str, object]]:
     test_session = _get_test_session(token)
-    if not test_session:
-        return questions
+
+    # Safety fallback: even without an active test session we still randomize
+    # question/options for display. Validation later uses option IDs + is_correct,
+    # so scoring does not depend on visual order.
+    if test_session is None:
+        fallback_questions: list[dict[str, object]] = []
+        for question in questions:
+            payload = dict(question)
+            options = [dict(option) for option in question["options"]]
+            random.shuffle(options)
+            payload["options"] = options
+            fallback_questions.append(payload)
+        random.shuffle(fallback_questions)
+        return fallback_questions
 
     question_ids = [int(question["id"]) for question in questions]
     order_key = "question_order"
     option_key = "option_order"
     nonce_key = "session_nonce"
+    has_session_updates = False
 
     if order_key not in test_session:
         shuffled = question_ids[:]
         random.shuffle(shuffled)
         test_session[order_key] = shuffled
-    if option_key not in test_session:
-        option_order: dict[str, list[int]] = {}
-        for question in questions:
-            option_ids = [int(option["id"]) for option in question["options"]]
-            random.shuffle(option_ids)
-            option_order[str(question["id"])] = option_ids
+        has_session_updates = True
+
+    option_order: dict[str, list[int]]
+    raw_option_order = test_session.get(option_key)
+    option_order = dict(raw_option_order) if isinstance(raw_option_order, dict) else {}
+    for question in questions:
+        question_key = str(question["id"])
+        if question_key in option_order:
+            continue
+        option_ids = [int(option["id"]) for option in question["options"]]
+        random.shuffle(option_ids)
+        option_order[question_key] = option_ids
+        has_session_updates = True
+    if option_order != raw_option_order:
         test_session[option_key] = option_order
+
     if nonce_key not in test_session:
         test_session[nonce_key] = secrets.token_urlsafe(10)
-
-    _set_test_session(token, test_session)
+        has_session_updates = True
 
     order_list = [int(item) for item in test_session.get(order_key, []) if int(item) in question_ids]
+    missing_question_ids = [question_id for question_id in question_ids if question_id not in order_list]
+    if missing_question_ids:
+        random.shuffle(missing_question_ids)
+        order_list.extend(missing_question_ids)
+        test_session[order_key] = order_list
+        has_session_updates = True
+
+    if has_session_updates:
+        _set_test_session(token, test_session)
+
     ordered_questions: list[dict[str, object]] = []
     question_map = {int(question["id"]): dict(question) for question in questions}
 
@@ -1177,7 +1208,7 @@ def _validate_student_form() -> tuple[dict[str, str], list[str]]:
     }, errors
 
 
-def _public_access_reason(test: sqlite3.Row | None, test_session: dict[str, str] | None = None) -> str | None:
+def _public_access_reason(test: sqlite3.Row | None, test_session: dict[str, object] | None = None) -> str | None:
     if test is None:
         return "test_not_found"
     if not test["is_active"]:
@@ -1209,7 +1240,7 @@ def _public_access_reason(test: sqlite3.Row | None, test_session: dict[str, str]
     return None
 
 
-def _remaining_seconds(test: sqlite3.Row, test_session: dict[str, str] | None) -> int | None:
+def _remaining_seconds(test: sqlite3.Row, test_session: dict[str, object] | None) -> int | None:
     if not test_session or not test["time_limit"]:
         return None
     started_at = _parse_started_at(test_session.get("started_at"))
@@ -1240,11 +1271,11 @@ def _evaluate_answers(questions: list[dict[str, object]], submitted_answers: dic
     answer_rows: list[dict[str, object]] = []
 
     for question in questions:
-        valid_option_ids = {str(option["id"]): option["id"] for option in question["options"]}
+        option_by_id = {str(option["id"]): dict(option) for option in question["options"]}
         selected_raw = submitted_answers.get(str(question["id"]), "").strip()
-        selected_option_id = valid_option_ids.get(selected_raw)
-        correct_option_id = question["correct_option_id"]
-        is_correct = selected_option_id is not None and selected_option_id == correct_option_id
+        selected_option = option_by_id.get(selected_raw)
+        selected_option_id = int(selected_option["id"]) if selected_option is not None else None
+        is_correct = bool(selected_option is not None and int(selected_option.get("is_correct") or 0) == 1)
         if is_correct:
             correct_count += 1
             score += int(question["points"])
