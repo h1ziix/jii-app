@@ -1941,6 +1941,7 @@ textarea {
 
     .site-header {
         top: 10px;
+        margin-bottom: 20px;
     }
 
     .header {
@@ -1976,12 +1977,15 @@ textarea {
     }
 
     .header-main {
-        display: grid;
-        grid-template-rows: 0fr;
+        display: flex;
+        flex-direction: column;
         width: 100%;
+        max-height: 0;
+        margin-top: 0;
         overflow: hidden;
         opacity: 0;
-        transition: grid-template-rows 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+        pointer-events: none;
+        transition: max-height 0.32s ease, opacity 0.3s ease, margin-top 0.3s ease;
     }
 
     .header-main > * {
@@ -2008,9 +2012,10 @@ textarea {
     }
 
     .nav-toggle:checked ~ .header-main {
-        grid-template-rows: 1fr;
+        max-height: 84vh;
         opacity: 1;
         margin-top: 10px;
+        pointer-events: auto;
     }
 
     .header-main {
@@ -2085,10 +2090,246 @@ textarea {
     }
 }
 
+@media (max-width: 768px) {
+    .page-shell {
+        width: min(100% - 14px, 1180px);
+        padding: 8px 0 36px;
+    }
+
+    .content-wrap {
+        gap: 14px;
+    }
+
+    .site-header {
+        top: 6px;
+        margin-bottom: 14px;
+    }
+
+    .nav-frame {
+        padding: 10px;
+        border-radius: 20px;
+    }
+
+    .header {
+        gap: 8px;
+    }
+
+    .header-center {
+        gap: 8px;
+        padding: 10px 0 4px;
+    }
+
+    .header-right {
+        gap: 8px;
+        padding-bottom: 2px;
+    }
+
+    .brand-atu {
+        gap: 10px;
+    }
+
+    .brand-lockup {
+        gap: 4px;
+    }
+
+    .brand-mark {
+        font-size: 1.32rem;
+        letter-spacing: 0.08em;
+    }
+
+    .brand-seal {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        padding-bottom: 3px;
+        font-size: 0.54rem;
+    }
+
+    .brand strong {
+        font-size: 0.84rem;
+    }
+
+    .brand small {
+        font-size: 0.72rem;
+    }
+
+    .nav-toggle-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
+    .nav-toggle-button span {
+        left: 11px;
+        width: 18px;
+    }
+
+    .nav-toggle-button span:nth-child(1) {
+        top: 14px;
+    }
+
+    .nav-toggle-button span:nth-child(2) {
+        top: 19px;
+    }
+
+    .nav-toggle-button span:nth-child(3) {
+        top: 24px;
+    }
+
+    .nav-toggle:checked + .nav-toggle-button span:nth-child(1),
+    .nav-toggle:checked + .nav-toggle-button span:nth-child(3) {
+        top: 19px;
+    }
+
+    .main-nav {
+        gap: 8px;
+    }
+
+    .nav-link,
+    .nav-action-link {
+        min-height: 42px;
+        padding: 0 14px;
+        font-size: 0.92rem;
+    }
+
+    .nav-link::after {
+        left: 14px;
+        width: 24px;
+        bottom: 8px;
+    }
+
+    .language-switcher {
+        padding: 8px 10px;
+    }
+
+    .lang-link {
+        min-width: 40px;
+        padding: 7px 9px;
+        font-size: 0.76rem;
+    }
+
+    .profile-chip {
+        padding: 5px 10px 5px 5px;
+    }
+
+    .profile-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.72rem;
+    }
+
+    .nav-cta {
+        min-height: 42px;
+        padding: 0 12px;
+    }
+
+    .hero {
+        gap: 14px;
+    }
+
+    .hero-copy,
+    .panel-card,
+    .auth-card,
+    .stat-card,
+    .info-card,
+    .dashboard-heading {
+        padding: 18px;
+    }
+
+    .floating-card {
+        padding: 20px;
+        transform: none;
+    }
+
+    .hero-copy h1,
+    .page-heading h1 {
+        margin-bottom: 10px;
+        font-size: clamp(1.62rem, 7.2vw, 2.05rem);
+        line-height: 1.08;
+    }
+
+    .eyebrow {
+        margin-bottom: 8px;
+        font-size: 0.72rem;
+    }
+
+    .hero-text,
+    .section-text {
+        margin: 0;
+        line-height: 1.55;
+    }
+
+    .hero-actions {
+        margin-top: 14px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .hero-points {
+        margin-top: 12px;
+        gap: 8px;
+    }
+
+    .hero-points span {
+        padding: 7px 10px;
+        font-size: 0.82rem;
+    }
+
+    .page-heading {
+        gap: 10px;
+        margin-bottom: 0;
+    }
+
+    .page-heading-actions,
+    .test-actions-row {
+        gap: 8px;
+    }
+
+    .card-grid,
+    .stats-grid,
+    .analytics-grid,
+    .test-grid,
+    .detail-grid,
+    .test-meta-grid,
+    .student-summary-grid,
+    .result-answer-grid,
+    .question-list {
+        gap: 12px;
+    }
+
+    .test-meta-item,
+    .student-summary-grid > div,
+    .result-answer-grid > div {
+        padding: 12px 14px;
+        border-radius: 14px;
+    }
+
+    .test-link-box {
+        gap: 6px;
+        margin-top: 14px;
+        padding: 12px;
+        border-radius: 14px;
+    }
+
+    .test-meta-grid {
+        margin-top: 14px;
+    }
+
+    .test-card-header,
+    .question-review-header {
+        gap: 10px;
+    }
+
+    .question-review-card,
+    .result-answer-card {
+        padding: 16px;
+    }
+}
+
 @media (max-width: 640px) {
     .page-shell {
-        width: min(100% - 18px, 1180px);
-        padding-top: 12px;
+        width: min(100% - 12px, 1180px);
+        padding-top: 6px;
     }
 
     .hero-copy,
@@ -2096,37 +2337,72 @@ textarea {
     .auth-card,
     .stat-card,
     .info-card {
-        padding: 20px;
+        padding: 16px;
     }
 
     .nav-frame {
-        padding: 12px;
-        border-radius: 24px;
+        padding: 9px;
+        border-radius: 18px;
     }
 
     .brand-lockup {
-        gap: 5px;
+        gap: 4px;
     }
 
     .brand-mark {
-        font-size: 1.54rem;
+        font-size: 1.2rem;
         letter-spacing: 0.08em;
     }
 
     .brand-seal {
-        width: 38px;
-        height: 38px;
-        border-radius: 12px;
-        padding-bottom: 4px;
-        font-size: 0.62rem;
+        width: 29px;
+        height: 29px;
+        border-radius: 9px;
+        padding-bottom: 3px;
+        font-size: 0.49rem;
     }
 
     .brand strong {
-        font-size: 0.94rem;
+        font-size: 0.78rem;
     }
 
     .brand small {
-        font-size: 0.78rem;
+        font-size: 0.67rem;
+    }
+
+    .nav-toggle-button {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+    }
+
+    .nav-toggle-button span {
+        left: 10px;
+        width: 16px;
+    }
+
+    .nav-toggle-button span:nth-child(1) {
+        top: 12px;
+    }
+
+    .nav-toggle-button span:nth-child(2) {
+        top: 17px;
+    }
+
+    .nav-toggle-button span:nth-child(3) {
+        top: 22px;
+    }
+
+    .nav-toggle:checked + .nav-toggle-button span:nth-child(1),
+    .nav-toggle:checked + .nav-toggle-button span:nth-child(3) {
+        top: 17px;
+    }
+
+    .nav-link,
+    .nav-action-link,
+    .nav-cta {
+        min-height: 40px;
+        padding-inline: 12px;
     }
 
     .brand-meta {
@@ -2135,15 +2411,15 @@ textarea {
 
     .hero-copy h1,
     .page-heading h1 {
-        font-size: 2rem;
+        font-size: 1.78rem;
     }
 
     .dashboard-heading {
-        padding: 20px;
+        padding: 16px;
     }
 
     .stat-card-icon {
-        padding: 18px;
+        padding: 14px;
     }
 }
 
