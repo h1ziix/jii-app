@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Банк вопросов | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('tests_eyebrow') }}</p>
+        <h1>Банк вопросов</h1>
+        <p class="section-text">Переиспользуемые вопросы по предмету, теме и сложности.</p>
+    </div>
+    <div class="page-heading-actions">
+        <a href="{{ url_for('testing.manage_tests') }}" class="btn btn-secondary">{{ t('manage_tests') }}</a>
+        <a href="{{ url_for('testing.question_bank_create') }}" class="btn btn-primary">Добавить вопрос в банк</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <span>Всего</span>
+        <strong>{{ stats.total_questions }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Легкая</span>
+        <strong>{{ stats.easy }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Средняя</span>
+        <strong>{{ stats.medium }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Сложная</span>
+        <strong>{{ stats.hard }}</strong>
+    </article>
+</section>
+
+<section class="panel-card">
+    <form method="get" class="filters-grid">
+        <div class="form-group">
+            <label for="subject">{{ t('subject') }}</label>
+            <select id="subject" name="subject">
+                <option value="">{{ t('all_subjects') }}</option>
+                {% for subject in subjects %}
+                    <option value="{{ subject }}" {% if selected_subject == subject %}selected{% endif %}>{{ subject }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="topic_id">Тема</label>
+            <select id="topic_id" name="topic_id">
+                <option value="">Любая тема</option>
+                {% for topic in topics %}
+                    <option value="{{ topic['id'] }}" {% if selected_topic_id == (topic['id'] ~ '') %}selected{% endif %}>
+                        {{ topic['subject'] }} - {{ topic['topic_name'] }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="difficulty">Сложность</label>
+            <select id="difficulty" name="difficulty">
+                <option value="" {% if not selected_difficulty %}selected{% endif %}>Любая</option>
+                <option value="easy" {% if selected_difficulty == 'easy' %}selected{% endif %}>Легкая</option>
+                <option value="medium" {% if selected_difficulty == 'medium' %}selected{% endif %}>Средняя</option>
+                <option value="hard" {% if selected_difficulty == 'hard' %}selected{% endif %}>Сложная</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">{{ t('apply_filters') }}</button>
+            <a href="{{ url_for('testing.question_bank') }}" class="btn btn-secondary">{{ t('reset') }}</a>
+        </div>
+    </form>
+</section>
+
+<section class="panel-card">
+    {% if questions %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{{ t('subject') }}</th>
+                        <th>Тема</th>
+                        <th>Сложность</th>
+                        <th>{{ t('question_text_label') }}</th>
+                        <th>{{ t('points_label') }}</th>
+                        <th>{{ t('actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in questions %}
+                        <tr>
+                            <td>{{ row['subject'] }}</td>
+                            <td>{{ row['topic_name'] or '-' }}</td>
+                            <td>{{ row['difficulty'] }}</td>
+                            <td>{{ row['question_text'] }}</td>
+                            <td>{{ row['points'] }}</td>
+                            <td>
+                                <a href="{{ url_for('testing.question_bank_edit', question_id=row['id']) }}" class="btn btn-secondary">Редактировать</a>
+                                <form method="post" action="{{ url_for('testing.question_bank_delete', question_id=row['id']) }}" onsubmit="return confirm('Удалить этот вопрос из банка?');">
+                                    <button type="submit" class="btn btn-danger">{{ t('delete') }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>В банке вопросов пока нет записей</h3>
+            <p>Создайте первый переиспользуемый вопрос.</p>
+            <a href="{{ url_for('testing.question_bank_create') }}" class="btn btn-primary">Добавить вопрос в банк</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

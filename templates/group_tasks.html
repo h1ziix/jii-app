@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Задачи групп | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('teacher_overview') }}</p>
+        <h1>Задачи групп</h1>
+        <p class="section-text">Назначайте и отслеживайте задачи для конкретных учебных групп.</p>
+    </div>
+    <div class="page-heading-actions">
+        <a href="{{ url_for('export_group_tasks_csv', group=selected_group) }}" class="btn btn-secondary">Экспорт CSV</a>
+        <a href="{{ url_for('add_group_task') }}" class="btn btn-primary">Назначить задачу группе</a>
+    </div>
+</section>
+
+<section class="panel-card">
+    <form method="get" class="filters-grid">
+        <div class="form-group">
+            <label for="group">Группа</label>
+            <select id="group" name="group">
+                <option value="">Все группы</option>
+                {% for group in groups %}
+                    <option value="{{ group }}" {% if selected_group == group %}selected{% endif %}>{{ group }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">{{ t('apply_filters') }}</button>
+            <a href="{{ url_for('manage_group_tasks') }}" class="btn btn-secondary">{{ t('reset') }}</a>
+        </div>
+    </form>
+</section>
+
+<section class="panel-card">
+    {% if tasks %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Группа</th>
+                        <th>{{ t('task_title') }}</th>
+                        <th>{{ t('subject') }}</th>
+                        <th>{{ t('deadline') }}</th>
+                        <th>{{ t('priority') }}</th>
+                        <th>{{ t('status') }}</th>
+                        <th>{{ t('actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                        <tr>
+                            <td>{{ task['assigned_group'] }}</td>
+                            <td>{{ task['title'] }}</td>
+                            <td>{{ task['subject'] }}</td>
+                            <td>{{ task['deadline'] }}</td>
+                            <td>{{ translate_value(task['priority'], 'priority') }}</td>
+                            <td>{{ translate_value(task['status'], 'status') }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('delete_group_task', task_id=task['id']) }}" onsubmit="return confirm('Удалить эту задачу группы?');">
+                                    <button type="submit" class="btn btn-danger">{{ t('delete') }}</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>Задачи групп не найдены</h3>
+            <p>Назначьте первую задачу для учебных групп.</p>
+            <a href="{{ url_for('add_group_task') }}" class="btn btn-primary">Назначить задачу группе</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('home_page_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-copy">
+        <p class="eyebrow">{{ t('home_eyebrow') }}</p>
+        <h1>{{ t('home_heading') }}</h1>
+        <p class="hero-text">
+            {{ t('home_text') }}
+        </p>
+        <div class="hero-actions">
+            <a href="{{ url_for('register') }}" class="btn btn-primary">{{ t('create_account') }}</a>
+            <a href="{{ url_for('login') }}" class="btn btn-secondary">{{ t('log_in') }}</a>
+        </div>
+        <div class="hero-points">
+            <span>{{ t('hero_point_1') }}</span>
+            <span>{{ t('hero_point_2') }}</span>
+            <span>{{ t('hero_point_3') }}</span>
+        </div>
+    </div>
+
+    <div class="hero-panel">
+        <div class="panel-card floating-card">
+            <p class="panel-label">{{ t('today_glance') }}</p>
+            <h3>{{ t('study_clearer_plan') }}</h3>
+            <ul class="feature-list">
+                <li>{{ t('home_feature_1') }}</li>
+                <li>{{ t('home_feature_2') }}</li>
+                <li>{{ t('home_feature_3') }}</li>
+                <li>{{ t('home_feature_4') }}</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="card-grid">
+    <article class="info-card">
+        <h3>{{ t('task_control') }}</h3>
+        <p>{{ t('task_control_text') }}</p>
+    </article>
+    <article class="info-card">
+        <h3>{{ t('deadline_focus') }}</h3>
+        <p>{{ t('deadline_focus_text') }}</p>
+    </article>
+    <article class="info-card">
+        <h3>{{ t('smart_organization') }}</h3>
+        <p>{{ t('smart_organization_text') }}</p>
+    </article>
+</section>
+{% endblock %}

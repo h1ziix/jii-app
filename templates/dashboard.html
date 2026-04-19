@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('dashboard_page_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading dashboard-heading">
+    <div>
+        <p class="eyebrow">{{ t('dashboard_eyebrow') }}</p>
+        <h1>{{ t('dashboard_heading', name=g.user["name"]) }}</h1>
+        <p class="section-text">{{ t('dashboard_text') }}</p>
+    </div>
+    <div class="page-heading-actions">
+        <a href="{{ url_for('add_task') }}" class="btn btn-primary">{{ t('add_new_task') }}</a>
+        <a href="{{ url_for('export_tasks_csv') }}" class="btn btn-secondary">{{ t('export_excel_csv') }}</a>
+        <button type="button" onclick="window.print()" class="btn btn-secondary">{{ t('export_pdf') }}</button>
+        <button type="button" onclick="window.print()" class="btn btn-secondary">{{ t('print_summary') }}</button>
+    </div>
+</section>
+
+<section class="stats-grid stats-grid-wide">
+    <article class="stat-card stat-card-icon">
+        <span class="stat-icon icon-total">TB</span>
+        <div class="stat-content">
+            <span class="stat-label">{{ t('total_tasks') }}</span>
+            <strong class="stat-value">{{ statistics.total }}</strong>
+            <small class="stat-description">{{ t('total_tasks_text') }}</small>
+        </div>
+    </article>
+    <article class="stat-card stat-card-icon">
+        <span class="stat-icon icon-success">OK</span>
+        <div class="stat-content">
+            <span class="stat-label">{{ t('completed') }}</span>
+            <strong class="stat-value">{{ statistics.completed }}</strong>
+            <small class="stat-description">{{ t('completed_text') }}</small>
+        </div>
+    </article>
+    <article class="stat-card warning-card stat-card-icon">
+        <span class="stat-icon icon-warning">DN</span>
+        <div class="stat-content">
+            <span class="stat-label">{{ t('due_soon') }}</span>
+            <strong class="stat-value">{{ statistics.due_soon }}</strong>
+            <small class="stat-description">{{ t('due_soon_text') }}</small>
+        </div>
+    </article>
+    <article class="stat-card danger-card stat-card-icon">
+        <span class="stat-icon icon-danger">OD</span>
+        <div class="stat-content">
+            <span class="stat-label">{{ t('overdue') }}</span>
+            <strong class="stat-value">{{ statistics.overdue }}</strong>
+            <small class="stat-description">{{ t('overdue_text_stat') }}</small>
+        </div>
+    </article>
+    <article class="stat-card stat-card-icon">
+        <span class="stat-icon icon-tests">EX</span>
+        <div class="stat-content">
+            <span class="stat-label">{{ t('tests_activity') }}</span>
+            <strong class="stat-value">{{ test_summary.tests_attempts }}</strong>
+            <small class="stat-description">{{ t('tests_attempts') }} &middot; {{ test_summary.tests_created }} {{ t('tests_created')|lower }}</small>
+        </div>
+    </article>
+</section>
+
+<section class="dashboard-insights-grid">
+    <article class="panel-card">
+        <div class="section-title-row">
+            <div>
+                <h2>{{ t('academic_insights') }}</h2>
+                <p class="section-text">{{ t('dashboard_completion') }}: {{ completion_rate }}%</p>
+            </div>
+            <span class="progress-pill progress-pill-{{ completion_band }}">
+                {% if completion_band == 'low' %}{{ t('progress_low') }}{% elif completion_band == 'medium' %}{{ t('progress_medium') }}{% else %}{{ t('progress_high') }}{% endif %}
+            </span>
+        </div>
+        <div class="progress-shell">
+            <div class="progress-bar progress-bar-{{ completion_band }}">
+                <span style="width: {{ completion_rate }}%;"></span>
+            </div>
+            <strong>{{ completion_rate }}%</strong>
+        </div>
+        <div class="insight-list">
+            {% for insight in recommendations %}
+                <div class="insight-item insight-{{ insight.type }}">{{ insight.text }}</div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <article class="panel-card">
+        <div class="section-title-row">
+            <div>
+                <h2>{{ t('upcoming_schedule') }}</h2>
+                <p class="section-text">{{ t('task_filters_text') }}</p>
+            </div>
+        </div>
+        {% if upcoming_schedule %}
+            <div class="schedule-list">
+                {% for day in upcoming_schedule %}
+                    <div class="schedule-day">
+                        <h3>{{ day.date }}</h3>
+                        <div class="schedule-items">
+                            {% for item in day.items %}
+                                <div class="schedule-item">
+                                    <div>
+                                        <strong>{{ item.title }}</strong>
+                                        <small>{{ item.subject }}</small>
+                                    </div>
+                                    <span class="badge badge-{{ item.priority|lower }}">{{ translate_value(item.priority, 'priority') }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-inline">{{ t('no_upcoming_schedule') }}</div>
+        {% endif %}
+    </article>
+</section>
+
+<section class="panel-card">
+    <div class="section-title-row">
+        <div>
+            <h2>{{ t('subjects_overview') }}</h2>
+            <p class="section-text">{{ t('tasks_by_subject_text') }}</p>
+        </div>
+        <a href="{{ url_for('export_summary_csv') }}" class="btn btn-secondary">{{ t('export_summary_csv') }}</a>
+    </div>
+    {% if subjects_overview %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{{ t('subject') }}</th>
+                        <th>{{ t('total_tasks') }}</th>
+                        <th>{{ t('completed') }}</th>
+                        <th>{{ t('pending_tasks') }}</th>
+                        <th>{{ t('subject_progress') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in subjects_overview %}
+                        <tr>
+                            <td>{{ row.subject }}</td>
+                            <td>{{ row.total_tasks }}</td>
+                            <td>{{ row.completed_tasks }}</td>
+                            <td>{{ row.pending_tasks }}</td>
+                            <td>
+                                <div class="mini-progress">
+                                    <span style="width: {{ row.progress }}%;"></span>
+                                </div>
+                                <small>{{ row.progress }}%</small>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>{{ t('no_tasks_found') }}</h3>
+            <p>{{ t('no_tasks_text') }}</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="panel-card">
+    <div class="section-title-row">
+        <div>
+            <h2>{{ t('task_filters') }}</h2>
+            <p class="section-text">{{ t('task_filters_text') }}</p>
+        </div>
+    </div>
+
+    <form method="get" class="filters-grid">
+        <div class="form-group">
+            <label for="search">{{ t('search') }}</label>
+            <input type="text" id="search" name="search" value="{{ filters.search }}" placeholder="{{ t('search_placeholder') }}">
+        </div>
+
+        <div class="form-group">
+            <label for="subject">{{ t('subject') }}</label>
+            <select id="subject" name="subject">
+                <option value="">{{ t('all_subjects') }}</option>
+                {% for subject in subjects %}
+                    <option value="{{ subject }}" {% if filters.subject == subject %}selected{% endif %}>{{ subject }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="status">{{ t('status') }}</label>
+            <select id="status" name="status">
+                <option value="">{{ t('all_statuses') }}</option>
+                {% for option in status_options %}
+                    <option value="{{ option }}" {% if filters.status == option %}selected{% endif %}>{{ translate_value(option, 'status') }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="priority">{{ t('priority') }}</label>
+            <select id="priority" name="priority">
+                <option value="">{{ t('all_priorities') }}</option>
+                {% for option in priority_options %}
+                    <option value="{{ option }}" {% if filters.priority == option %}selected{% endif %}>{{ translate_value(option, 'priority') }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="sort">{{ t('sort_by') }}</label>
+            <select id="sort" name="sort">
+                <option value="deadline_asc" {% if filters.sort == "deadline_asc" %}selected{% endif %}>{{ t('sort_deadline_asc') }}</option>
+                <option value="deadline_desc" {% if filters.sort == "deadline_desc" %}selected{% endif %}>{{ t('sort_deadline_desc') }}</option>
+                <option value="created_desc" {% if filters.sort == "created_desc" %}selected{% endif %}>{{ t('sort_created_desc') }}</option>
+                <option value="created_asc" {% if filters.sort == "created_asc" %}selected{% endif %}>{{ t('sort_created_asc') }}</option>
+                <option value="priority_high" {% if filters.sort == "priority_high" %}selected{% endif %}>{{ t('sort_priority_high') }}</option>
+                <option value="status" {% if filters.sort == "status" %}selected{% endif %}>{{ t('sort_status') }}</option>
+                <option value="subject" {% if filters.sort == "subject" %}selected{% endif %}>{{ t('sort_subject') }}</option>
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">{{ t('apply_filters') }}</button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">{{ t('reset') }}</a>
+        </div>
+    </form>
+</section>
+
+<section class="panel-card">
+    <div class="section-title-row">
+        <div>
+            <h2>{{ t('your_tasks') }}</h2>
+            <p class="section-text">{{ t('your_tasks_text') }}</p>
+        </div>
+    </div>
+
+    {% if tasks %}
+        <div class="task-list">
+            {% for task in tasks %}
+                {% set is_overdue = task["deadline"] < today_date and task["status"] != "Completed" %}
+                <article class="task-card {% if is_overdue %}task-overdue{% endif %}">
+                    <div class="task-main">
+                        <div class="task-title-row">
+                            <h3>{{ task["title"] }}</h3>
+                            <div class="badge-row">
+                                <span class="badge badge-subject">{{ task["subject"] }}</span>
+                                <span class="badge badge-priority badge-{{ task['priority']|lower|replace(' ', '-') }}">{{ translate_value(task["priority"], 'priority') }}</span>
+                                <span class="badge badge-status">{{ translate_value(task["status"], 'status') }}</span>
+                            </div>
+                        </div>
+
+                        <p class="task-description">
+                            {{ task["description"] if task["description"] else t('no_description') }}
+                        </p>
+
+                        <div class="task-meta">
+                            <span><strong>{{ t('deadline_label') }}:</strong> {{ task["deadline"] }}</span>
+                            <span><strong>{{ t('created_label') }}:</strong> {{ task["created_at"] }}</span>
+                            {% if is_overdue %}
+                                <span class="overdue-text">{{ t('overdue_badge') }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="task-actions">
+                        <a href="{{ url_for('edit_task', task_id=task['id']) }}" class="btn btn-secondary">{{ t('edit') }}</a>
+                        <form method="post" action="{{ url_for('delete_task', task_id=task['id']) }}" onsubmit="return confirm('{{ t('delete_confirm') }}');">
+                            <button type="submit" class="btn btn-danger">{{ t('delete') }}</button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>{{ t('no_tasks_found') }}</h3>
+            <p>{{ t('no_tasks_text') }}</p>
+            <a href="{{ url_for('add_task') }}" class="btn btn-primary">{{ t('create_first_task') }}</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
+

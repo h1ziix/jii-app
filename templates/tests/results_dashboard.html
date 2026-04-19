@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('results_page_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('results_eyebrow') }}</p>
+        <h1>{{ t('results_heading') }}</h1>
+        <p class="section-text">{{ t('results_text') }}</p>
+    </div>
+    <div class="page-heading-actions">
+        <a href="{{ url_for('testing.export_results_csv', test_id=selected_test_id, subject=selected_subject) }}" class="btn btn-secondary">Экспорт CSV</a>
+        <a href="{{ url_for('testing.results_report', test_id=selected_test_id, subject=selected_subject) }}" class="btn btn-secondary">Отчет для печати</a>
+        <a href="{{ url_for('testing.manage_tests') }}" class="btn btn-secondary">{{ t('return_to_tests') }}</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <span>{{ t('attempts_count_label') }}</span>
+        <strong>{{ summary.attempts_count }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>{{ t('average_score_label') }}</span>
+        <strong>{{ summary.average_score }}</strong>
+    </article>
+    <article class="stat-card warning-card">
+        <span>{{ t('highest_score_label') }}</span>
+        <strong>{{ summary.highest_score }}</strong>
+    </article>
+    <article class="stat-card danger-card">
+        <span>{{ t('lowest_score_label') }}</span>
+        <strong>{{ summary.lowest_score }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Уровень выполнения</span>
+        <strong>{{ summary.completion_rate }}%</strong>
+    </article>
+</section>
+
+<section class="panel-card">
+    <form method="get" class="filters-grid">
+        <div class="form-group">
+            <label for="test_id">{{ t('filter_by_test') }}</label>
+            <select id="test_id" name="test_id">
+                <option value="">{{ t('all_tests') }}</option>
+                {% for test in tests %}
+                    <option value="{{ test['id'] }}" {% if selected_test_id == (test['id'] ~ '') %}selected{% endif %}>{{ test['title'] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="subject">{{ t('subject') }}</label>
+            <select id="subject" name="subject">
+                <option value="">{{ t('all_subjects') }}</option>
+                {% for subject in subjects %}
+                    <option value="{{ subject }}" {% if selected_subject == subject %}selected{% endif %}>{{ subject }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">{{ t('apply_filters') }}</button>
+            <a href="{{ url_for('testing.results_dashboard') }}" class="btn btn-secondary">{{ t('reset') }}</a>
+        </div>
+    </form>
+</section>
+
+<section class="panel-card">
+    <div class="section-title-row">
+        <div>
+            <h2>{{ t('view_results') }}</h2>
+            <p class="section-text">{{ t('results_text') }}</p>
+        </div>
+    </div>
+
+    {% if attempts %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{{ t('student_name_label') }}</th>
+                        <th>{{ t('group_class_label') }}</th>
+                        <th>{{ t('tests_page_title') }}</th>
+                        <th>{{ t('subject') }}</th>
+                        <th>Попытка №</th>
+                        <th>{{ t('score_label') }}</th>
+                        <th>{{ t('percentage_label') }}</th>
+                        <th>{{ t('submission_time') }}</th>
+                        <th>{{ t('actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in attempts %}
+                        <tr>
+                            <td>{{ attempt['student_name'] }}</td>
+                            <td>{{ attempt['student_group'] }}</td>
+                            <td>{{ attempt['test_title'] }}</td>
+                            <td>{{ attempt['test_subject'] }}</td>
+                            <td>{{ attempt['attempt_number'] if 'attempt_number' in attempt.keys() else '-' }}</td>
+                            <td>{{ attempt['score'] }}</td>
+                            <td>{{ attempt['percentage'] }}%</td>
+                            <td>{{ attempt['submitted_at'] }}</td>
+                            <td>
+                                <a href="{{ url_for('testing.public_test_result', token=attempt['test_token'], result_token=attempt['result_token']) }}" class="btn btn-secondary">
+                                    {{ t('view_result') }}
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>{{ t('no_results_found') }}</h3>
+            <p>{{ t('no_results_text') }}</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

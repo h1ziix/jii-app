@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('student_result_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('student_result_eyebrow') }}</p>
+        <h1>{{ attempt['test_title'] }}</h1>
+        <p class="section-text">{{ t('student_result_text') }}</p>
+    </div>
+    <div class="page-heading-actions">
+        <span class="result-grade-chip {% if attempt['percentage'] >= 80 %}result-grade-high{% elif attempt['percentage'] >= 50 %}result-grade-medium{% else %}result-grade-low{% endif %}">
+            {{ attempt['percentage'] }}%
+        </span>
+        {% if can_retake %}
+            <a href="{{ url_for('testing.public_test_start', token=test_token) }}" class="btn btn-secondary">{{ t('take_another_test') }}</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <span>{{ t('score_label') }}</span>
+        <strong>{{ attempt['score'] }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>{{ t('percentage_label') }}</span>
+        <strong>{{ attempt['percentage'] }}%</strong>
+    </article>
+    <article class="stat-card warning-card">
+        <span>{{ t('correct_answers_label') }}</span>
+        <strong>{{ attempt['correct_count'] }}</strong>
+    </article>
+    <article class="stat-card danger-card">
+        <span>{{ t('wrong_answers_label') }}</span>
+        <strong>{{ attempt['wrong_count'] }}</strong>
+    </article>
+</section>
+
+<section class="panel-card student-summary-card">
+    <div class="student-summary-grid">
+        <div>
+            <span>{{ t('student_name_label') }}</span>
+            <strong>{{ attempt['student_name'] }}</strong>
+        </div>
+        <div>
+            <span>{{ t('group_class_label') }}</span>
+            <strong>{{ attempt['student_group'] }}</strong>
+        </div>
+        <div>
+            <span>{{ t('submission_time') }}</span>
+            <strong>{{ attempt['submitted_at'] }}</strong>
+        </div>
+    </div>
+</section>
+
+<section class="question-list">
+    {% for answer in answers %}
+        <article class="panel-card result-answer-card {% if answer['is_correct'] %}result-answer-card-correct{% else %}result-answer-card-wrong{% endif %}">
+            <div class="question-review-header">
+                <div>
+                    <h2>{{ loop.index }}. {{ answer['question_text'] }}</h2>
+                    <p class="section-text">{{ t('points_label') }}: {{ answer['points'] }}</p>
+                </div>
+            </div>
+
+            <div class="result-answer-grid">
+                <div>
+                    <span>{{ t('selected_answer') }}</span>
+                    <strong>{{ answer['selected_option_text'] if answer['selected_option_text'] else t('unanswered') }}</strong>
+                </div>
+                <div>
+                    <span>{{ t('correct_answer_label') }}</span>
+                    <strong>{{ answer['correct_option_text'] }}</strong>
+                </div>
+            </div>
+        </article>
+    {% endfor %}
+</section>
+{% endblock %}

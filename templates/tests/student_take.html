@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('student_take_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('student_take_eyebrow') }}</p>
+        <h1>{{ test['title'] }}</h1>
+        <p class="section-text">{{ t('student_test_text') }}</p>
+    </div>
+    {% if remaining_seconds is not none %}
+        <div class="timer-chip" data-timer-seconds="{{ remaining_seconds }}">
+            <span>{{ t('timer_remaining') }}</span>
+            <strong id="timer-display">00:00</strong>
+        </div>
+    {% endif %}
+</section>
+
+<section class="panel-card student-summary-card">
+    <div class="student-summary-grid">
+        <div>
+            <span>{{ t('student_name_label') }}</span>
+            <strong>{{ student['student_name'] }}</strong>
+        </div>
+        <div>
+            <span>{{ t('group_class_label') }}</span>
+            <strong>{{ student['student_group'] }}</strong>
+        </div>
+        <div>
+            <span>{{ t('student_id_optional') }}</span>
+            <strong>{{ student['student_identifier'] if student['student_identifier'] else '-' }}</strong>
+        </div>
+        <div>
+            <span>Попытки</span>
+            <strong>{{ attempts_used }}/{{ max_attempts }}</strong>
+        </div>
+    </div>
+</section>
+
+<form method="post" id="student-test-form" class="question-list">
+    <input type="hidden" name="session_nonce" value="{{ student['session_nonce'] }}">
+    {% for question in questions %}
+        <article class="panel-card question-review-card">
+            <div class="question-review-header">
+                <div>
+                    <h2>{{ loop.index }}. {{ question['question_text'] }}</h2>
+                    <p class="section-text">{{ t('points_label') }}: {{ question['points'] }}</p>
+                </div>
+            </div>
+
+            <div class="student-option-list">
+                {% for option in question['options'] %}
+                    <label class="student-option">
+                        <input type="radio" name="question_{{ question['id'] }}" value="{{ option['id'] }}">
+                        <span>{{ option['option_text'] }}</span>
+                    </label>
+                {% endfor %}
+            </div>
+        </article>
+    {% endfor %}
+
+    <div class="test-submit-bar">
+        <button type="submit" class="btn btn-primary">{{ t('submit_test') }}</button>
+    </div>
+</form>
+
+{% if remaining_seconds is not none %}
+    <script>
+        (() => {
+            const timerElement = document.querySelector("[data-timer-seconds]");
+            const display = document.getElementById("timer-display");
+            const form = document.getElementById("student-test-form");
+            if (!timerElement || !display || !form) {
+                return;
+            }
+
+            let seconds = Number(timerElement.dataset.timerSeconds);
+
+            const renderTime = () => {
+                const safeSeconds = Math.max(seconds, 0);
+                const minutes = Math.floor(safeSeconds / 60);
+                const remainder = safeSeconds % 60;
+                display.textContent = `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+            };
+
+            renderTime();
+
+            const interval = window.setInterval(() => {
+                seconds -= 1;
+                renderTime();
+                if (seconds <= 0) {
+                    window.clearInterval(interval);
+                    form.submit();
+                }
+            }, 1000);
+        })();
+    </script>
+{% endif %}
+{% endblock %}

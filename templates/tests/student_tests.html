@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('assigned_tests') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('nav_tests') }}</p>
+        <h1>{{ t('assigned_tests') }}</h1>
+        <p class="section-text">{{ t('student_dashboard_text') }}</p>
+    </div>
+    <div class="page-heading-actions">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">{{ t('nav_dashboard') }}</a>
+        <a href="{{ url_for('testing.assigned_tests') }}" class="btn btn-secondary">{{ t('reset') }}</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <span>{{ t('assigned_tests') }}</span>
+        <strong>{{ stats.assigned_tests }}</strong>
+        <small>{{ t('group_name') }}: {{ student_group if student_group else '-' }}</small>
+    </article>
+    <article class="stat-card warning-card">
+        <span>{{ t('pending_tests') }}</span>
+        <strong>{{ stats.pending_tests }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>{{ t('completed_tests') }}</span>
+        <strong>{{ stats.completed_tests }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>{{ t('average_score_label') }}</span>
+        <strong>{{ stats.average_score }}%</strong>
+    </article>
+</section>
+
+<section class="panel-card">
+    <div class="section-title-row">
+        <div>
+            <h2>{{ t('assigned_tests') }}</h2>
+            <p class="section-text">{{ t('assigned_group_hint') }}</p>
+        </div>
+    </div>
+
+    {% if tests %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{{ t('test_title_label') }}</th>
+                        <th>{{ t('subject') }}</th>
+                        <th>{{ t('question_count_label') }}</th>
+                        <th>{{ t('deadline') }}</th>
+                        <th>{{ t('attempt_count_label') }}</th>
+                        <th>Лимит попыток</th>
+                        <th>{{ t('highest_score_label') }}</th>
+                        <th>{{ t('actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in tests %}
+                        <tr>
+                            <td>{{ test['title'] }}</td>
+                            <td>{{ test['subject'] }}</td>
+                            <td>{{ test['question_count'] }}</td>
+                            <td>{{ test['deadline']|replace('T', ' ') if test['deadline'] else '-' }}</td>
+                            <td>{{ test['attempt_count'] }}</td>
+                            <td>
+                                {{ test['attempts_used'] }}/{{ test['max_attempts'] }}
+                                {% if test['attempt_locked'] %}
+                                    <br><small class="overdue-text">Лимит достигнут</small>
+                                {% else %}
+                                    <br><small>Осталось: {{ test['attempts_left'] }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ test['best_percentage'] if test['best_percentage'] is not none else '-' }}{% if test['best_percentage'] is not none %}%{% endif %}</td>
+                            <td>
+                                {% if test['attempt_locked'] %}
+                                    <span class="btn btn-secondary" style="opacity:0.55; cursor:not-allowed;">Лимит попыток достигнут</span>
+                                {% else %}
+                                    <a href="{{ url_for('testing.public_test_start', token=test['token']) }}" class="btn btn-secondary">
+                                        {% if test['attempt_count'] %}{{ t('resume_test') }}{% else %}{{ t('start_test') }}{% endif %}
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>{{ t('no_tests_found') }}</h3>
+            <p>{{ t('no_tests_text') }}</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="panel-card">
+    <div class="section-title-row">
+        <div>
+            <h2>{{ t('my_results') }}</h2>
+            <p class="section-text">{{ t('student_result_text') }}</p>
+        </div>
+    </div>
+
+    {% if attempts %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{{ t('tests_page_title') }}</th>
+                        <th>{{ t('subject') }}</th>
+                        <th>{{ t('score_label') }}</th>
+                        <th>{{ t('percentage_label') }}</th>
+                        <th>{{ t('submission_time') }}</th>
+                        <th>{{ t('actions') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in attempts %}
+                        <tr>
+                            <td>{{ attempt['test_title'] }}</td>
+                            <td>{{ attempt['test_subject'] }}</td>
+                            <td>{{ attempt['score'] }}</td>
+                            <td>{{ attempt['percentage'] }}%</td>
+                            <td>{{ attempt['submitted_at'] }}</td>
+                            <td>
+                                <a href="{{ url_for('testing.public_test_result', token=attempt['test_token'], result_token=attempt['result_token']) }}" class="btn btn-secondary">
+                                    {{ t('view_result') }}
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>{{ t('no_results_found') }}</h3>
+            <p>{{ t('no_results_text') }}</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

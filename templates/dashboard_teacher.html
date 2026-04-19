@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('dashboard_page_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading dashboard-heading">
+    <div>
+        <p class="eyebrow">{{ t('teacher_overview') }}</p>
+        <h1>{{ g.user["name"] }}, {{ t('teacher_dashboard_heading') }}</h1>
+        <p class="section-text">{{ t('teacher_dashboard_text') }}</p>
+    </div>
+    <div class="page-heading-actions">
+        <a href="{{ url_for('testing.create_test') }}" class="btn btn-primary">{{ t('create_test') }}</a>
+        <a href="{{ url_for('testing.results_dashboard') }}" class="btn btn-secondary">{{ t('view_results') }}</a>
+        <a href="{{ url_for('testing.question_bank') }}" class="btn btn-secondary">Банк вопросов</a>
+        <a href="{{ url_for('testing.student_journal') }}" class="btn btn-secondary">Журнал студентов</a>
+        <a href="{{ url_for('manage_group_tasks') }}" class="btn btn-secondary">Задачи групп</a>
+        <a href="{{ url_for('testing.manage_tests') }}" class="btn btn-secondary">{{ t('manage_tests') }}</a>
+        <a href="{{ url_for('add_task') }}" class="btn btn-secondary">{{ t('add_new_task') }}</a>
+    </div>
+</section>
+
+<section class="stats-grid stats-grid-wide">
+    <article class="stat-card stat-card-icon">
+        <span class="stat-icon icon-tests">EX</span>
+        <div class="stat-content">
+            <span class="stat-label">{{ t('tests_created') }}</span>
+            <strong class="stat-value">{{ teacher_overview.tests_created }}</strong>
+            <small class="stat-description">{{ t('teacher_dashboard_text') }}</small>
+        </div>
+    </article>
+    <article class="stat-card stat-card-icon">
+        <span class="stat-icon icon-total">AT</span>
+        <div class="stat-content">
+            <span class="stat-label">{{ t('attempts_total_label') }}</span>
+            <strong class="stat-value">{{ teacher_overview.total_attempts }}</strong>
+            <small class="stat-description">{{ t('results_text') }}</small>
+        </div>
+    </article>
+    <article class="stat-card stat-card-icon">
+        <span class="stat-icon icon-success">ST</span>
+        <div class="stat-content">
+            <span class="stat-label">{{ t('total_students_participated') }}</span>
+            <strong class="stat-value">{{ teacher_overview.students_participated }}</strong>
+            <small class="stat-description">{{ t('tests_activity') }}</small>
+        </div>
+    </article>
+    <article class="stat-card stat-card-icon">
+        <span class="stat-icon icon-warning">TS</span>
+        <div class="stat-content">
+            <span class="stat-label">{{ t('total_tasks') }}</span>
+            <strong class="stat-value">{{ summary.total }}</strong>
+            <small class="stat-description">{{ t('total_tasks_text') }}</small>
+        </div>
+    </article>
+    <article class="stat-card stat-card-icon">
+        <span class="stat-icon icon-danger">CP</span>
+        <div class="stat-content">
+            <span class="stat-label">{{ t('dashboard_completion') }}</span>
+            <strong class="stat-value">{{ completion_rate }}%</strong>
+            <small class="stat-description">{{ t('completion_rate_text') }}</small>
+        </div>
+    </article>
+</section>
+
+<section class="dashboard-insights-grid">
+    <article class="panel-card">
+        <div class="section-title-row">
+            <div>
+                <h2>{{ t('tests_page_title') }}</h2>
+                <p class="section-text">{{ t('teacher_quick_actions') }}</p>
+            </div>
+            <a href="{{ url_for('testing.manage_tests') }}" class="btn btn-secondary">{{ t('manage_tests') }}</a>
+        </div>
+
+        {% if teacher_overview.recent_tests %}
+            <div class="table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>{{ t('test_title_label') }}</th>
+                            <th>{{ t('subject') }}</th>
+                            <th>{{ t('question_count_label') }}</th>
+                            <th>{{ t('attempt_count_label') }}</th>
+                            <th>{{ t('actions') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for test in teacher_overview.recent_tests %}
+                            <tr>
+                                <td>{{ test['title'] }}</td>
+                                <td>{{ test['subject'] }}</td>
+                                <td>{{ test['question_count'] }}</td>
+                                <td>{{ test['attempt_count'] }}</td>
+                                <td>
+                                    <a href="{{ url_for('testing.test_detail', test_id=test['id']) }}" class="btn btn-secondary">{{ t('open_test') }}</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3>{{ t('no_tests_found') }}</h3>
+                <p>{{ t('no_tests_text') }}</p>
+                <a href="{{ url_for('testing.create_test') }}" class="btn btn-primary">{{ t('create_first_test') }}</a>
+            </div>
+        {% endif %}
+    </article>
+
+    <article class="panel-card">
+        <div class="section-title-row">
+            <div>
+                <h2>{{ t('your_tasks') }}</h2>
+                <p class="section-text">{{ t('your_tasks_text') }}</p>
+            </div>
+            <a href="{{ url_for('statistics') }}" class="btn btn-secondary">{{ t('nav_statistics') }}</a>
+        </div>
+
+        {% if recent_tasks %}
+            <div class="schedule-list">
+                {% for task in recent_tasks %}
+                    <div class="schedule-day">
+                        <h3>{{ task['title'] }}</h3>
+                        <div class="schedule-items">
+                            <div class="schedule-item">
+                                <div>
+                                    <strong>{{ task['subject'] }}</strong>
+                                    <small>{{ t('deadline') }}: {{ task['deadline'] }}</small>
+                                </div>
+                                <span class="badge badge-{{ task['priority']|lower }}">{{ translate_value(task['priority'], 'priority') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-inline">{{ t('no_tasks_text') }}</div>
+        {% endif %}
+    </article>
+</section>
+
+<section class="panel-card">
+    <div class="section-title-row">
+        <div>
+            <h2>Назначения по задачам групп</h2>
+            <p class="section-text">Задачи, назначенные учебным группам.</p>
+        </div>
+        <div class="page-heading-actions">
+            <a href="{{ url_for('add_group_task') }}" class="btn btn-primary">Назначить задачу группе</a>
+            <a href="{{ url_for('manage_group_tasks') }}" class="btn btn-secondary">Управление задачами групп</a>
+        </div>
+    </div>
+
+    {% if recent_group_tasks %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Группа</th>
+                        <th>{{ t('task_title') }}</th>
+                        <th>{{ t('subject') }}</th>
+                        <th>{{ t('deadline') }}</th>
+                        <th>{{ t('priority') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in recent_group_tasks %}
+                        <tr>
+                            <td>{{ task['assigned_group'] }}</td>
+                            <td>{{ task['title'] }}</td>
+                            <td>{{ task['subject'] }}</td>
+                            <td>{{ task['deadline'] }}</td>
+                            <td>{{ translate_value(task['priority'], 'priority') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>Пока нет задач для групп</h3>
+            <p>Создайте задачу для группы, например IT-101 или SE-202.</p>
+            <a href="{{ url_for('add_group_task') }}" class="btn btn-primary">Назначить первую задачу группе</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Журнал активности | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('teacher_overview') }}</p>
+        <h1>Журнал активности</h1>
+        <p class="section-text">История действий по авторизации, тестированию и изменениям контента.</p>
+    </div>
+    <a href="{{ url_for('testing.manage_tests') }}" class="btn btn-secondary">{{ t('manage_tests') }}</a>
+</section>
+
+<section class="panel-card">
+    <form method="get" class="filters-grid">
+        <div class="form-group">
+            <label for="action">Действие</label>
+            <select id="action" name="action">
+                <option value="">Все действия</option>
+                {% for action in actions %}
+                    <option value="{{ action }}" {% if selected_action == action %}selected{% endif %}>{{ action }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">{{ t('apply_filters') }}</button>
+            <a href="{{ url_for('testing.activity_logs') }}" class="btn btn-secondary">{{ t('reset') }}</a>
+        </div>
+    </form>
+</section>
+
+<section class="panel-card">
+    {% if rows %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Время</th>
+                        <th>Пользователь</th>
+                        <th>Роль</th>
+                        <th>Действие</th>
+                        <th>Сущность</th>
+                        <th>Детали</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td>{{ row['created_at'] }}</td>
+                            <td>{{ row['user_name'] if row['user_name'] else '-' }}</td>
+                            <td>{{ row['role'] if row['role'] else '-' }}</td>
+                            <td>{{ row['action'] }}</td>
+                            <td>
+                                {% if row['entity_type'] %}
+                                    {{ row['entity_type'] }}{% if row['entity_id'] %} #{{ row['entity_id'] }}{% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ row['details'] if row['details'] else '-' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>Записи активности отсутствуют</h3>
+            <p>История появится после взаимодействия пользователей с платформой.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

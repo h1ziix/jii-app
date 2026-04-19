@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('statistics_page_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('statistics_eyebrow') }}</p>
+        <h1>{{ t('statistics_heading') }}</h1>
+        <p class="section-text">{{ t('statistics_text') }}</p>
+    </div>
+    <div class="page-heading-actions">
+        <a href="{{ url_for('export_summary_csv') }}" class="btn btn-secondary">{{ t('export_excel_csv') }}</a>
+        <button type="button" onclick="window.print()" class="btn btn-secondary">{{ t('export_pdf') }}</button>
+        <button type="button" onclick="window.print()" class="btn btn-secondary">{{ t('print_summary') }}</button>
+    </div>
+</section>
+
+<section class="stats-grid stats-grid-wide">
+    <article class="stat-card">
+        <span>{{ t('total_tasks') }}</span>
+        <strong>{{ summary.total }}</strong>
+        <small>{{ t('recorded_in_planner') }}</small>
+    </article>
+    <article class="stat-card">
+        <span>{{ t('completed') }}</span>
+        <strong>{{ summary.completed }}</strong>
+        <small>{{ t('completed_successfully') }}</small>
+    </article>
+    <article class="stat-card warning-card">
+        <span>{{ t('due_soon') }}</span>
+        <strong>{{ summary.due_soon }}</strong>
+        <small>{{ t('due_soon_stat_text') }}</small>
+    </article>
+    <article class="stat-card danger-card">
+        <span>{{ t('overdue') }}</span>
+        <strong>{{ summary.overdue }}</strong>
+        <small>{{ t('overdue_stat_text') }}</small>
+    </article>
+    <article class="stat-card">
+        <span>{{ t('tests_activity') }}</span>
+        <strong>{{ test_summary.tests_attempts }}</strong>
+        <small>{{ test_summary.tests_created }} {{ t('tests_created')|lower }}</small>
+    </article>
+</section>
+
+<section class="analytics-grid">
+    <article class="panel-card">
+        <div class="section-title-row">
+            <div>
+                <h2>{{ t('completion_rate') }}</h2>
+                <p class="section-text">{{ t('completion_rate_text') }}</p>
+            </div>
+            <span class="progress-pill progress-pill-{{ completion_band }}">
+                {% if completion_band == 'low' %}{{ t('progress_low') }}{% elif completion_band == 'medium' %}{{ t('progress_medium') }}{% else %}{{ t('progress_high') }}{% endif %}
+            </span>
+        </div>
+
+        <div class="progress-ring-shell">
+            <div class="progress-ring" style="--value: {{ completion_rate }};">
+                <strong>{{ completion_rate }}%</strong>
+            </div>
+        </div>
+    </article>
+
+    <article class="panel-card">
+        <div class="section-title-row">
+            <div>
+                <h2>{{ t('tasks_by_status') }}</h2>
+                <p class="section-text">{{ t('tasks_by_status_text') }}</p>
+            </div>
+        </div>
+        {% if status_rows %}
+            <div class="analytics-list">
+                {% for row in status_rows %}
+                    <div class="analytics-item">
+                        <span>{{ translate_value(row["status"], 'status') }}</span>
+                        <strong>{{ row["total"] }}</strong>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-inline">{{ t('no_status_data') }}</p>
+        {% endif %}
+    </article>
+    <article class="panel-card">
+        <div class="section-title-row">
+            <div>
+                <h2>{{ t('tasks_by_subject') }}</h2>
+                <p class="section-text">{{ t('tasks_by_subject_text') }}</p>
+            </div>
+        </div>
+        {% if subject_rows %}
+            <div class="analytics-list">
+                {% for row in subject_rows %}
+                    <div class="analytics-item">
+                        <span>{{ row["subject"] }}</span>
+                        <strong>{{ row["total"] }}</strong>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-inline">{{ t('no_subject_data') }}</p>
+        {% endif %}
+    </article>
+
+    <article class="panel-card">
+        <div class="section-title-row">
+            <div>
+                <h2>{{ t('tasks_by_priority') }}</h2>
+                <p class="section-text">{{ t('tasks_by_priority_text') }}</p>
+            </div>
+        </div>
+        {% if priority_rows %}
+            <div class="analytics-list">
+                {% for row in priority_rows %}
+                    <div class="analytics-item">
+                        <span>{{ translate_value(row["priority"], 'priority') }}</span>
+                        <strong>{{ row["total"] }}</strong>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-inline">{{ t('no_priority_data') }}</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="panel-card">
+    <div class="section-title-row">
+        <div>
+            <h2>{{ t('statistics_visuals') }}</h2>
+            <p class="section-text">{{ t('statistics_text') }}</p>
+        </div>
+    </div>
+
+    <div class="chart-grid">
+        <article class="chart-card">
+            <h3>{{ t('chart_status_title') }}</h3>
+            <canvas id="statusChart"></canvas>
+        </article>
+        <article class="chart-card">
+            <h3>{{ t('chart_subject_title') }}</h3>
+            <canvas id="subjectChart"></canvas>
+        </article>
+        <article class="chart-card">
+            <h3>{{ t('chart_weekly_title') }}</h3>
+            <canvas id="weeklyChart"></canvas>
+        </article>
+        <article class="chart-card">
+            <h3>{{ t('chart_overdue_title') }}</h3>
+            <canvas id="overdueChart"></canvas>
+        </article>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    (() => {
+        const statusCtx = document.getElementById("statusChart");
+        const subjectCtx = document.getElementById("subjectChart");
+        const weeklyCtx = document.getElementById("weeklyChart");
+        const overdueCtx = document.getElementById("overdueChart");
+
+        if (!statusCtx || !subjectCtx || !weeklyCtx || !overdueCtx) {
+            return;
+        }
+
+        const statusData = {{ status_chart|tojson }};
+        const subjectData = {{ subject_chart|tojson }};
+        const weeklyData = {{ weekly_productivity|tojson }};
+        const overdueData = {{ overdue_chart|tojson }};
+
+        new Chart(statusCtx, {
+            type: "doughnut",
+            data: {
+                labels: statusData.labels,
+                datasets: [{
+                    data: statusData.data,
+                    backgroundColor: ["#0f6cad", "#14b8a6", "#16a34a"],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: "bottom" } }
+            }
+        });
+
+        new Chart(subjectCtx, {
+            type: "bar",
+            data: {
+                labels: subjectData.labels,
+                datasets: [{
+                    label: "{{ t('tasks_by_subject') }}",
+                    data: subjectData.data,
+                    backgroundColor: "#0f6cad"
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+
+        new Chart(weeklyCtx, {
+            type: "line",
+            data: {
+                labels: weeklyData.labels,
+                datasets: [{
+                    label: "{{ t('chart_legend_created') }}",
+                    data: weeklyData.created,
+                    borderColor: "#14b8a6",
+                    backgroundColor: "rgba(20, 184, 166, 0.2)",
+                    fill: true,
+                    tension: 0.35
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+
+        new Chart(overdueCtx, {
+            type: "bar",
+            data: {
+                labels: overdueData.labels,
+                datasets: [{
+                    data: overdueData.data,
+                    backgroundColor: ["#dc2626", "#f59e0b", "#16a34a"]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+    })();
+</script>
+{% endblock %}

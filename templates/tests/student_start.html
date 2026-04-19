@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('student_start_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('student_start_eyebrow') }}</p>
+        <h1>{{ t('student_start_heading') }}</h1>
+        <p class="section-text">{{ t('student_start_text') }}</p>
+    </div>
+</section>
+
+{% if test %}
+    <section class="detail-grid">
+        <article class="panel-card">
+            <div class="section-title-row">
+                <div>
+                    <h2>{{ test['title'] }}</h2>
+                    <p class="section-text">{{ test['description'] if test['description'] else t('no_description') }}</p>
+                </div>
+                <span class="badge badge-subject">{{ test['subject'] }}</span>
+            </div>
+
+            <div class="test-meta-grid">
+                <div class="test-meta-item">
+                    <span>{{ t('question_count_label') }}</span>
+                    <strong>{{ test['question_count'] }}</strong>
+                </div>
+                <div class="test-meta-item">
+                    <span>{{ t('total_points_label') }}</span>
+                    <strong>{{ test['total_points'] }}</strong>
+                </div>
+                <div class="test-meta-item">
+                    <span>{{ t('deadline') }}</span>
+                    <strong>{{ test['deadline']|replace('T', ' ') if test['deadline'] else '-' }}</strong>
+                </div>
+                <div class="test-meta-item">
+                    <span>{{ t('optional_time_limit') }}</span>
+                    <strong>
+                        {% if test['time_limit'] %}
+                            {{ test['time_limit'] }} {{ t('minutes_suffix') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </strong>
+                </div>
+                <div class="test-meta-item">
+                    <span>Попытки</span>
+                    <strong>{{ attempts_used }}/{{ max_attempts }}</strong>
+                </div>
+            </div>
+        </article>
+
+        {% if access_reason %}
+            <article class="panel-card empty-state">
+                <h3>{{ t(access_reason) }}</h3>
+                <p>{{ t('student_start_text') }}</p>
+            </article>
+        {% elif attempt_blocked %}
+            <article class="panel-card empty-state">
+                <h3>Лимит попыток достигнут</h3>
+                <p>Вы уже использовали {{ attempts_used }} из {{ max_attempts }} доступных попыток для этого теста.</p>
+                <a href="{{ url_for('testing.assigned_tests') }}" class="btn btn-secondary">{{ t('return_to_tests') }}</a>
+            </article>
+        {% else %}
+            <article class="panel-card form-panel public-form-panel">
+                <div class="student-summary-grid">
+                    <div>
+                        <span>{{ t('student_name_label') }}</span>
+                        <strong>{{ student['student_name'] }}</strong>
+                    </div>
+                    <div>
+                        <span>{{ t('group_class_label') }}</span>
+                        <strong>{{ student['student_group'] if student['student_group'] else '-' }}</strong>
+                    </div>
+                    <div>
+                        <span>{{ t('student_id_optional') }}</span>
+                        <strong>{{ student['student_identifier'] if student['student_identifier'] else '-' }}</strong>
+                    </div>
+                </div>
+
+                <div class="filter-actions start-actions">
+                    {% if existing_session %}
+                        <a href="{{ url_for('testing.public_test_take', token=test['token']) }}" class="btn btn-secondary">{{ t('resume_test') }}</a>
+                    {% endif %}
+                    <form method="post">
+                        <button type="submit" class="btn btn-primary">{{ t('start_test') }}</button>
+                    </form>
+                </div>
+            </article>
+        {% endif %}
+    </section>
+{% else %}
+    <section class="panel-card empty-state">
+        <h3>{{ t('test_not_found') }}</h3>
+        <p>{{ t('student_start_text') }}</p>
+    </section>
+{% endif %}
+{% endblock %}

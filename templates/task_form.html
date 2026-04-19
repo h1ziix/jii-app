@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t(page_title_key) }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('task_management') }}</p>
+        <h1>{{ t(page_title_key) }}</h1>
+        <p class="section-text">{{ t('task_form_text') }}</p>
+    </div>
+</section>
+
+<section class="panel-card form-panel">
+    <form method="post" class="form-grid">
+        <div class="form-group form-group-full">
+            <label for="title">{{ t('task_title') }}</label>
+            <input type="text" id="title" name="title" value="{{ task['title'] }}" placeholder="{{ t('task_title_placeholder') }}" required>
+        </div>
+
+        <div class="form-group form-group-full">
+            <label for="description">{{ t('description') }}</label>
+            <textarea id="description" name="description" rows="5" placeholder="{{ t('description_placeholder') }}">{{ task['description'] }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="subject">{{ t('subject') }}</label>
+            <input type="text" id="subject" name="subject" value="{{ task['subject'] }}" placeholder="{{ t('subject_placeholder') }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="deadline">{{ t('deadline') }}</label>
+            <input type="date" id="deadline" name="deadline" value="{{ task['deadline'] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="priority">{{ t('priority') }}</label>
+            <select id="priority" name="priority" required>
+                {% for option in priority_options %}
+                    <option value="{{ option }}" {% if task['priority'] == option %}selected{% endif %}>{{ translate_value(option, 'priority') }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="status">{{ t('status') }}</label>
+            <select id="status" name="status" required>
+                {% for option in status_options %}
+                    <option value="{{ option }}" {% if task['status'] == option %}selected{% endif %}>{{ translate_value(option, 'status') }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">{{ t(page_title_key) }}</button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">{{ t('cancel') }}</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

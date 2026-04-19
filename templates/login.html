@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('login_page_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="auth-layout">
+    <div class="auth-card">
+        <p class="eyebrow">{{ t('login_eyebrow') }}</p>
+        <h1>{{ t('login_heading') }}</h1>
+        <p class="section-text">{{ t('login_text') }}</p>
+
+        <form method="post" class="form-grid">
+            <div class="form-group">
+                <label for="email">{{ t('email_address') }}</label>
+                <input type="email" id="email" name="email" value="{{ request.form.get('email', '') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">{{ t('password') }}</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">{{ t('login_button') }}</button>
+        </form>
+
+        <p class="form-footer">
+            {{ t('need_account') }}
+            <a href="{{ url_for('register') }}">{{ t('create_one_now') }}</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

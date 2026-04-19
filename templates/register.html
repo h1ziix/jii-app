@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('register_page_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="auth-layout">
+    <div class="auth-card">
+        <p class="eyebrow">{{ t('register_eyebrow') }}</p>
+        <h1>{{ t('register_heading') }}</h1>
+        <p class="section-text">{{ t('register_text') }}</p>
+
+        <form method="post" class="form-grid">
+            <div class="form-group">
+                <label for="name">{{ t('full_name') }}</label>
+                <input type="text" id="name" name="name" value="{{ request.form.get('name', '') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">{{ t('email_address') }}</label>
+                <input type="email" id="email" name="email" value="{{ request.form.get('email', '') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">{{ t('password') }}</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">{{ t('confirm_password') }}</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+            </div>
+
+            <div class="form-group">
+                <label for="role">{{ t('role_label') }}</label>
+                <select id="role" name="role" required>
+                    {% set selected_role = request.form.get('role', 'student') %}
+                    <option value="student" {% if selected_role == 'student' %}selected{% endif %}>{{ t('role_student') }}</option>
+                    <option value="teacher" {% if selected_role == 'teacher' %}selected{% endif %}>{{ t('role_teacher') }}</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="group-name-wrapper">
+                <label for="group_name">{{ t('group_name_optional') }}</label>
+                <input type="text" id="group_name" name="group_name" value="{{ request.form.get('group_name', '') }}">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">{{ t('register_button') }}</button>
+        </form>
+
+        <p class="form-footer">
+            {{ t('already_have_account') }}
+            <a href="{{ url_for('login') }}">{{ t('login_here') }}</a>
+        </p>
+    </div>
+</section>
+
+<script>
+    (() => {
+        const roleSelect = document.getElementById("role");
+        const groupWrapper = document.getElementById("group-name-wrapper");
+        if (!roleSelect || !groupWrapper) {
+            return;
+        }
+
+        const toggleGroupField = () => {
+            const isStudent = roleSelect.value === "student";
+            groupWrapper.style.display = isStudent ? "grid" : "none";
+        };
+
+        toggleGroupField();
+        roleSelect.addEventListener("change", toggleGroupField);
+    })();
+</script>
+{% endblock %}

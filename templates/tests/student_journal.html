@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Журнал студентов | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('results_eyebrow') }}</p>
+        <h1>Журнал студентов</h1>
+        <p class="section-text">Отслеживайте успеваемость студентов по группам и тестам.</p>
+    </div>
+    <div class="page-heading-actions">
+        <a href="{{ url_for('testing.export_student_journal_csv', group=selected_group, test_id=selected_test_id) }}" class="btn btn-secondary">Экспорт CSV</a>
+        <a href="{{ url_for('testing.manage_tests') }}" class="btn btn-secondary">{{ t('manage_tests') }}</a>
+    </div>
+</section>
+
+<section class="panel-card">
+    <form method="get" class="filters-grid">
+        <div class="form-group">
+            <label for="group">Группа</label>
+            <select id="group" name="group">
+                <option value="">Все группы</option>
+                {% for group_name in groups %}
+                    <option value="{{ group_name }}" {% if selected_group == group_name %}selected{% endif %}>{{ group_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="test_id">{{ t('tests_page_title') }}</label>
+            <select id="test_id" name="test_id">
+                <option value="">Все тесты</option>
+                {% for test in tests %}
+                    <option value="{{ test['id'] }}" {% if selected_test_id == (test['id'] ~ '') %}selected{% endif %}>{{ test['title'] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">{{ t('apply_filters') }}</button>
+            <a href="{{ url_for('testing.student_journal') }}" class="btn btn-secondary">{{ t('reset') }}</a>
+        </div>
+    </form>
+</section>
+
+<section class="panel-card">
+    {% if rows %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{{ t('student_name_label') }}</th>
+                        <th>{{ t('group_class_label') }}</th>
+                        <th>{{ t('tests_page_title') }}</th>
+                        <th>{{ t('subject') }}</th>
+                        <th>Попытки</th>
+                        <th>Лучший результат</th>
+                        <th>Средний результат</th>
+                        <th>Последняя отправка</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td>{{ row['student_name'] }}</td>
+                            <td>{{ row['student_group'] if row['student_group'] else '-' }}</td>
+                            <td>{{ row['test_title'] }}</td>
+                            <td>{{ row['test_subject'] }}</td>
+                            <td>{{ row['attempts_count'] }}</td>
+                            <td>{{ row['best_score'] }}%</td>
+                            <td>{{ row['average_score'] }}%</td>
+                            <td>{{ row['last_submitted_at'] if row['last_submitted_at'] else '-' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>Записи журнала не найдены</h3>
+            <p>Измените фильтры или дождитесь новых отправок.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

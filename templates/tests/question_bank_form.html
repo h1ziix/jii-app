@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('tests_eyebrow') }}</p>
+        <h1>{{ page_title }}</h1>
+        <p class="section-text">Создавайте переиспользуемые вопросы для автоматической генерации тестов.</p>
+    </div>
+    <a href="{{ url_for('testing.question_bank') }}" class="btn btn-secondary">Назад к банку вопросов</a>
+</section>
+
+<section class="panel-card form-panel">
+    <form method="post" class="form-grid">
+        <div class="form-group">
+            <label for="subject">{{ t('subject') }}</label>
+            <input type="text" id="subject" name="subject" value="{{ question['subject'] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="topic_name">Тема</label>
+            <input type="text" id="topic_name" name="topic_name" value="{{ question['topic_name'] }}" list="topic-suggestions" required>
+            <datalist id="topic-suggestions">
+                {% for topic in topics %}
+                    <option value="{{ topic['topic_name'] }}">{{ topic['subject'] }}</option>
+                {% endfor %}
+            </datalist>
+        </div>
+
+        <div class="form-group">
+            <label for="difficulty">Сложность</label>
+            <select id="difficulty" name="difficulty" required>
+                <option value="easy" {% if question['difficulty'] == 'easy' %}selected{% endif %}>Легкая</option>
+                <option value="medium" {% if question['difficulty'] == 'medium' %}selected{% endif %}>Средняя</option>
+                <option value="hard" {% if question['difficulty'] == 'hard' %}selected{% endif %}>Сложная</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="points">{{ t('points_label') }}</label>
+            <input type="number" id="points" name="points" min="1" value="{{ question['points'] }}" required>
+        </div>
+
+        <div class="form-group form-group-full">
+            <label for="question_text">{{ t('question_text_label') }}</label>
+            <textarea id="question_text" name="question_text" rows="4" required>{{ question['question_text'] }}</textarea>
+        </div>
+
+        {% for idx in [1, 2, 3, 4] %}
+            <div class="form-group">
+                <label for="option_{{ idx }}">{{ t('answer_option_number', number=idx) }}</label>
+                <input type="text" id="option_{{ idx }}" name="option_{{ idx }}" value="{{ question['options'][idx - 1] }}" required>
+            </div>
+        {% endfor %}
+
+        <div class="form-group">
+            <label for="correct_option">{{ t('correct_option_label') }}</label>
+            <select id="correct_option" name="correct_option" required>
+                {% for idx in [1, 2, 3, 4] %}
+                    <option value="{{ idx }}" {% if question['correct_option'] == idx %}selected{% endif %}>{{ idx }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">{{ t('save_changes') }}</button>
+            <a href="{{ url_for('testing.question_bank') }}" class="btn btn-secondary">{{ t('cancel') }}</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

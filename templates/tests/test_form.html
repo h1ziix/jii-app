@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t(page_title_key) }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('tests_eyebrow') }}</p>
+        <h1>{{ t(page_title_key) }}</h1>
+        <p class="section-text">{{ t('test_form_text') }}</p>
+    </div>
+    <a href="{{ url_for('testing.manage_tests') }}" class="btn btn-secondary">{{ t('return_to_tests') }}</a>
+</section>
+
+<section class="panel-card form-panel">
+    <form method="post" class="form-grid">
+        <div class="form-group form-group-full">
+            <label for="title">{{ t('test_title_label') }}</label>
+            <input type="text" id="title" name="title" value="{{ test['title'] }}" placeholder="{{ t('test_title_placeholder') }}" required>
+        </div>
+
+        <div class="form-group form-group-full">
+            <label for="description">{{ t('description') }}</label>
+            <textarea id="description" name="description" rows="5" placeholder="{{ t('test_description_placeholder') }}">{{ test['description'] }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="subject">{{ t('subject') }}</label>
+            <input type="text" id="subject" name="subject" value="{{ test['subject'] }}" placeholder="{{ t('subject_placeholder') }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="assigned_group">{{ t('assigned_group_label') }}</label>
+            <input type="text" id="assigned_group" name="assigned_group" value="{{ test['assigned_group'] }}" placeholder="{{ t('group_name_optional') }}">
+            <small>{{ t('assigned_group_hint') }}</small>
+        </div>
+
+        <div class="form-group">
+            <label for="deadline">{{ t('optional_deadline') }}</label>
+            <input type="datetime-local" id="deadline" name="deadline" value="{{ test['deadline'] }}">
+        </div>
+
+        <div class="form-group">
+            <label for="time_limit">{{ t('optional_time_limit') }}</label>
+            <input type="number" id="time_limit" name="time_limit" min="1" value="{{ test['time_limit'] }}" placeholder="{{ t('time_limit_minutes') }}">
+        </div>
+
+        <div class="form-group">
+            <label for="max_attempts">Максимум попыток на студента</label>
+            <input type="number" id="max_attempts" name="max_attempts" min="1" value="{{ test['max_attempts'] }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="is_active">{{ t('test_status_label') }}</label>
+            <select id="is_active" name="is_active">
+                <option value="1" {% if test['is_active'] %}selected{% endif %}>{{ t('status_active') }}</option>
+                <option value="0" {% if not test['is_active'] %}selected{% endif %}>{{ t('status_inactive') }}</option>
+            </select>
+        </div>
+
+        <div class="form-group form-group-full">
+            <label for="bank_question_count">Автодобавление вопросов из банка</label>
+            <input
+                type="number"
+                id="bank_question_count"
+                name="bank_question_count"
+                min="0"
+                value="{{ test['bank_question_count'] }}"
+                placeholder="0 = только вручную"
+            >
+            <small>Необязательно. Добавить случайные вопросы из банка при сохранении теста.</small>
+        </div>
+
+        <div class="form-group">
+            <label for="bank_topic_id">Фильтр тем банка вопросов</label>
+            <select id="bank_topic_id" name="bank_topic_id">
+                <option value="">Любая тема</option>
+                {% for topic in topics %}
+                    <option value="{{ topic['id'] }}" {% if test['bank_topic_id'] and (test['bank_topic_id'] ~ '') == (topic['id'] ~ '') %}selected{% endif %}>
+                        {{ topic['subject'] }} - {{ topic['topic_name'] }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="bank_difficulty">Фильтр сложности из банка вопросов</label>
+            <select id="bank_difficulty" name="bank_difficulty">
+                <option value="any" {% if test['bank_difficulty'] == 'any' %}selected{% endif %}>Любая</option>
+                <option value="easy" {% if test['bank_difficulty'] == 'easy' %}selected{% endif %}>Легкая</option>
+                <option value="medium" {% if test['bank_difficulty'] == 'medium' %}selected{% endif %}>Средняя</option>
+                <option value="hard" {% if test['bank_difficulty'] == 'hard' %}selected{% endif %}>Сложная</option>
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">
+                {{ t('create_test') if page_title_key == 'create_test' else t('save_changes') }}
+            </button>
+            <a href="{{ url_for('testing.manage_tests') }}" class="btn btn-secondary">{{ t('cancel') }}</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

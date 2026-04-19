@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Отчет по результатам | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('results_eyebrow') }}</p>
+        <h1>Отчет по результатам для печати</h1>
+        <p class="section-text">Используйте печать браузера, чтобы сохранить отчет в PDF.</p>
+    </div>
+    <div class="page-heading-actions">
+        <button type="button" class="btn btn-secondary" onclick="window.print()">{{ t('print_summary') }}</button>
+        <a href="{{ url_for('testing.results_dashboard', test_id=selected_test_id, subject=selected_subject) }}" class="btn btn-secondary">{{ t('view_results') }}</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <span>{{ t('attempts_count_label') }}</span>
+        <strong>{{ summary.attempts_count }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>{{ t('average_score_label') }}</span>
+        <strong>{{ summary.average_score }}</strong>
+    </article>
+    <article class="stat-card warning-card">
+        <span>{{ t('highest_score_label') }}</span>
+        <strong>{{ summary.highest_score }}</strong>
+    </article>
+    <article class="stat-card danger-card">
+        <span>{{ t('lowest_score_label') }}</span>
+        <strong>{{ summary.lowest_score }}</strong>
+    </article>
+</section>
+
+<section class="panel-card">
+    {% if attempts %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>{{ t('student_name_label') }}</th>
+                        <th>{{ t('group_class_label') }}</th>
+                        <th>{{ t('tests_page_title') }}</th>
+                        <th>{{ t('score_label') }}</th>
+                        <th>{{ t('percentage_label') }}</th>
+                        <th>{{ t('submission_time') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in attempts %}
+                        <tr>
+                            <td>{{ attempt['student_name'] }}</td>
+                            <td>{{ attempt['student_group'] }}</td>
+                            <td>{{ attempt['test_title'] }}</td>
+                            <td>{{ attempt['score'] }}</td>
+                            <td>{{ attempt['percentage'] }}%</td>
+                            <td>{{ attempt['submitted_at'] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <h3>{{ t('no_results_found') }}</h3>
+            <p>{{ t('no_results_text') }}</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('tests_page_title') }} | {{ t('site_title') }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ t('tests_eyebrow') }}</p>
+        <h1>{{ t('tests_heading') }}</h1>
+        <p class="section-text">{{ t('tests_text') }}</p>
+    </div>
+    <div class="page-heading-actions">
+        <a href="{{ url_for('testing.results_dashboard') }}" class="btn btn-secondary">{{ t('view_results') }}</a>
+        <a href="{{ url_for('testing.question_bank') }}" class="btn btn-secondary">Банк вопросов</a>
+        <a href="{{ url_for('testing.student_journal') }}" class="btn btn-secondary">Журнал студентов</a>
+        <a href="{{ url_for('testing.activity_logs') }}" class="btn btn-secondary">Журнал активности</a>
+        <a href="{{ url_for('testing.create_test') }}" class="btn btn-primary">{{ t('create_test') }}</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="stat-card">
+        <span>{{ t('total_tests_label') }}</span>
+        <strong>{{ stats.total_tests }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>{{ t('active_tests_label') }}</span>
+        <strong>{{ stats.active_tests }}</strong>
+    </article>
+    <article class="stat-card warning-card">
+        <span>{{ t('inactive_tests_label') }}</span>
+        <strong>{{ stats.inactive_tests }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>{{ t('attempts_total_label') }}</span>
+        <strong>{{ stats.total_attempts }}</strong>
+    </article>
+    <article class="stat-card">
+        <span>Средний балл тестов</span>
+        <strong>{{ stats.average_score }}%</strong>
+    </article>
+    <article class="stat-card">
+        <span>Средний уровень выполнения</span>
+        <strong>{{ stats.average_completion }}%</strong>
+    </article>
+    <article class="stat-card">
+        <span>Вопросов в банке</span>
+        <strong>{{ stats.question_bank_total }}</strong>
+    </article>
+</section>
+
+<section class="panel-card">
+    <form method="get" class="filters-grid">
+        <div class="form-group">
+            <label for="subject">{{ t('subject') }}</label>
+            <select id="subject" name="subject">
+                <option value="">{{ t('all_subjects') }}</option>
+                {% for subject in subjects %}
+                    <option value="{{ subject }}" {% if selected_subject == subject %}selected{% endif %}>{{ subject }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary">{{ t('apply_filters') }}</button>
+            <a href="{{ url_for('testing.manage_tests') }}" class="btn btn-secondary">{{ t('reset') }}</a>
+        </div>
+    </form>
+</section>
+
+<section class="test-grid">
+    {% if tests %}
+        {% for test in tests %}
+            <article class="panel-card test-card-panel">
+                <div class="test-card-header">
+                    <div>
+                        <h2>{{ test['title'] }}</h2>
+                        <p class="section-text">{{ test['description'] if test['description'] else t('no_description') }}</p>
+                    </div>
+                    <div class="badge-row">
+                        <span class="badge badge-subject">{{ test['subject'] }}</span>
+                        <span class="badge {% if test['is_active'] %}badge-low{% else %}badge-high{% endif %}">
+                            {{ t('status_active') if test['is_active'] else t('status_inactive') }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="test-meta-grid">
+                    <div class="test-meta-item">
+                        <span>{{ t('question_count_label') }}</span>
+                        <strong>{{ test['question_count'] }}</strong>
+                    </div>
+                    <div class="test-meta-item">
+                        <span>{{ t('attempt_count_label') }}</span>
+                        <strong>{{ test['attempt_count'] }}</strong>
+                    </div>
+                    <div class="test-meta-item">
+                        <span>Лимит попыток</span>
+                        <strong>{{ test['max_attempts'] }}</strong>
+                    </div>
+                    <div class="test-meta-item">
+                        <span>{{ t('total_points_label') }}</span>
+                        <strong>{{ test['total_points'] }}</strong>
+                    </div>
+                    <div class="test-meta-item">
+                        <span>Средний балл</span>
+                        <strong>{{ test['average_percentage'] if test['average_percentage'] is not none else '-' }}{% if test['average_percentage'] is not none %}%{% endif %}</strong>
+                    </div>
+                    <div class="test-meta-item">
+                        <span>{{ t('assigned_group_label') }}</span>
+                        <strong>{{ test['assigned_group'] if test['assigned_group'] else '-' }}</strong>
+                    </div>
+                    <div class="test-meta-item">
+                        <span>Выполнение</span>
+                        {% set assigned = test['assigned_students'] or 0 %}
+                        {% set completed = test['completed_students'] or 0 %}
+                        <strong>{% if assigned > 0 %}{{ ((completed / assigned) * 100)|round(1) }}%{% else %}0%{% endif %}</strong>
+                    </div>
+                    <div class="test-meta-item">
+                        <span>{{ t('deadline') }}</span>
+                        <strong>{{ test['deadline']|replace('T', ' ') if test['deadline'] else '-' }}</strong>
+                    </div>
+                </div>
+
+                <div class="test-actions-row">
+                    <a href="{{ url_for('testing.test_detail', test_id=test['id']) }}" class="btn btn-primary">{{ t('open_test') }}</a>
+                    <a href="{{ url_for('testing.edit_test', test_id=test['id']) }}" class="btn btn-secondary">{{ t('edit_test') }}</a>
+                    <a href="{{ url_for('testing.results_dashboard', test_id=test['id']) }}" class="btn btn-secondary">{{ t('view_results') }}</a>
+                    <form method="post" action="{{ url_for('testing.delete_test', test_id=test['id']) }}" onsubmit="return confirm('{{ t('delete_test_confirm') }}');">
+                        <button type="submit" class="btn btn-danger">{{ t('delete') }}</button>
+                    </form>
+                </div>
+            </article>
+        {% endfor %}
+    {% else %}
+        <div class="panel-card empty-state wide-empty-state">
+            <h3>{{ t('no_tests_found') }}</h3>
+            <p>{{ t('no_tests_text') }}</p>
+            <a href="{{ url_for('testing.create_test') }}" class="btn btn-primary">{{ t('create_first_test') }}</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

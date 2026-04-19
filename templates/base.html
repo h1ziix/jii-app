@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="{{ current_language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ t('site_title') }}{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+{% set endpoint = request.endpoint or '' %}
+<body class="app-animated {% if endpoint == 'dashboard' %}dashboard-page{% endif %}">
+    <div class="dashboard-wave-bg" aria-hidden="true">
+        <span class="dashboard-wave dashboard-wave-1"></span>
+        <span class="dashboard-wave dashboard-wave-2"></span>
+        <span class="dashboard-wave dashboard-wave-3"></span>
+    </div>
+    <div class="page-shell">
+        <header class="site-header">
+            <div class="nav-frame header">
+                <div class="header-left">
+                    <a class="brand brand-atu" href="{{ url_for('home') }}">
+                        <span class="brand-lockup" aria-hidden="true">
+                            <span class="brand-mark">ATU</span>
+                            <span class="brand-seal">1957</span>
+                        </span>
+                        <span class="brand-copy">
+                            <strong>{{ t('site_title') }}</strong>
+                            <small>{{ t('site_subtitle_university') }}</small>
+                            <span class="brand-meta">{{ t('university_name') }} &middot; {{ t('university_unit') }}</span>
+                        </span>
+                    </a>
+                </div>
+
+                <input type="checkbox" id="nav-toggle" class="nav-toggle">
+                <label for="nav-toggle" class="nav-toggle-button" aria-label="Переключить навигацию">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </label>
+
+                <div class="header-main">
+                    <div class="header-center">
+                        <nav class="main-nav" aria-label="Основная навигация">
+                            {% if g.user %}
+                                <a href="{{ url_for('dashboard') }}" class="nav-link {% if endpoint == 'dashboard' %}nav-link-active{% endif %}">
+                                    {{ t('nav_dashboard') }}
+                                </a>
+                                {% if is_teacher %}
+                                    <a href="{{ url_for('testing.manage_tests') }}" class="nav-link {% if endpoint[:8] == 'testing.' %}nav-link-active{% endif %}">
+                                        {{ t('nav_tests') }}
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('testing.assigned_tests') }}" class="nav-link {% if endpoint[:8] == 'testing.' %}nav-link-active{% endif %}">
+                                        {{ t('nav_tests') }}
+                                    </a>
+                                {% endif %}
+                                <a href="{{ url_for('statistics') }}" class="nav-link {% if endpoint == 'statistics' %}nav-link-active{% endif %}">
+                                    {{ t('nav_statistics') }}
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('home') }}" class="nav-link {% if endpoint == 'home' %}nav-link-active{% endif %}">
+                                    {{ t('nav_home') }}
+                                </a>
+                                <a href="{{ url_for('login') }}" class="nav-link {% if endpoint == 'login' %}nav-link-active{% endif %}">
+                                    {{ t('nav_login') }}
+                                </a>
+                                <a href="{{ url_for('register') }}" class="nav-link {% if endpoint == 'register' %}nav-link-active{% endif %}">
+                                    {{ t('nav_register') }}
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+
+                    <div class="header-right">
+                        {% if g.user %}
+                            <div class="profile-chip">
+                                <div class="profile-avatar">{{ user_initials }}</div>
+                                <div class="profile-meta">
+                                    <strong>{{ g.user['name'] }}</strong>
+                                    <small>
+                                        <span class="role-badge role-badge-{{ current_user_role_code }}">{{ user_role }}</span>
+                                    </small>
+                                </div>
+                            </div>
+                            <a href="{{ url_for('add_task') }}" class="nav-action-link {% if endpoint in ['add_task', 'edit_task'] %}nav-action-link-active{% endif %}">
+                                {{ t('nav_add_task') }}
+                            </a>
+                        {% endif %}
+
+                        <div class="language-switcher" aria-label="{{ t('language_label') }}">
+                            <span class="language-switcher-label">{{ t('language_label') }}</span>
+                            <div class="language-switcher-links">
+                                {% for code, name in supported_languages.items() %}
+                                    <a
+                                        href="{{ url_for('set_language', lang_code=code, next=request.full_path if request.query_string else request.path) }}"
+                                        class="lang-link {% if current_language == code %}lang-link-active{% endif %}"
+                                        title="{{ name }}"
+                                    >
+                                        {{ t('language_' ~ code) }}
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {% if g.user %}
+                            <a href="{{ url_for('logout') }}" class="nav-cta nav-cta-primary">{{ t('nav_logout') }}</a>
+                        {% else %}
+                            <a href="{{ url_for('login') }}" class="nav-cta nav-cta-secondary {% if endpoint == 'login' %}nav-cta-current{% endif %}">{{ t('nav_login') }}</a>
+                            <a href="{{ url_for('register') }}" class="nav-cta nav-cta-primary {% if endpoint == 'register' %}nav-cta-current{% endif %}">{{ t('nav_register') }}</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="content-wrap">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <section class="flash-stack">
+                        {% for category, message in messages %}
+                            <div class="flash flash-{{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </section>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        // Stable header scroll behavior: hide on down, show on up, no jitter.
+        (function () {
+            const header = document.querySelector(".site-header");
+            if (!header) return;
+
+            const navToggle = document.getElementById("nav-toggle");
+            const TOP_VISIBLE_ZONE = 20;
+            const MIN_DELTA = 8;
+
+            let lastScrollY = Math.max(window.scrollY || 0, 0);
+            let headerHeight = header.offsetHeight;
+            let isHidden = false;
+            let ticking = false;
+
+            const setHidden = (nextHidden) => {
+                if (nextHidden === isHidden) return;
+                isHidden = nextHidden;
+                header.classList.toggle("is-hidden", nextHidden);
+                header.classList.toggle("is-visible", !nextHidden);
+            };
+
+            const handleScroll = () => {
+                const currentY = Math.max(window.scrollY || 0, 0);
+                const delta = currentY - lastScrollY;
+                const navExpanded = Boolean(navToggle && navToggle.checked);
+
+                header.classList.toggle("scrolled", currentY > TOP_VISIBLE_ZONE);
+
+                if (currentY <= TOP_VISIBLE_ZONE || navExpanded) {
+                    setHidden(false);
+                    lastScrollY = currentY;
+                    ticking = false;
+                    return;
+                }
+
+                if (Math.abs(delta) < MIN_DELTA) {
+                    ticking = false;
+                    return;
+                }
+
+                if (delta > 0 && currentY > headerHeight) {
+                    setHidden(true);
+                } else if (delta < 0) {
+                    setHidden(false);
+                }
+
+                lastScrollY = currentY;
+                ticking = false;
+            };
+
+            const scheduleScroll = () => {
+                if (ticking) return;
+                ticking = true;
+                window.requestAnimationFrame(handleScroll);
+            };
+
+            const updateMetrics = () => {
+                headerHeight = header.offsetHeight;
+                scheduleScroll();
+            };
+
+            header.classList.add("is-visible");
+            handleScroll();
+
+            window.addEventListener("scroll", scheduleScroll, { passive: true });
+            window.addEventListener("resize", updateMetrics, { passive: true });
+            window.addEventListener("orientationchange", updateMetrics, { passive: true });
+
+            if (navToggle) {
+                navToggle.addEventListener("change", () => {
+                    setHidden(false);
+                    scheduleScroll();
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
